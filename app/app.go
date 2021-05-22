@@ -10,13 +10,14 @@ import (
 var rd *render.Render
 
 type Todo struct {
-	Id        uint8     `json:"id"`
+	Id        int       `json:"id"`
 	Name      string    `json:"name"`
 	Completed bool      `json:"completed"`
 	CreatedAt time.Time `json:"created_at"`
 }
 
 var todoMap map[int]*Todo
+var lastIndex uint = 0
 
 func MakeHandler() http.Handler {
 	todoMap = make(map[int]*Todo)
@@ -27,7 +28,18 @@ func MakeHandler() http.Handler {
 	router := mux.NewRouter()
 	router.HandleFunc("/", indexHandler)
 	router.HandleFunc("/todos", getTodoListHandler).Methods("GET")
+	router.HandleFunc("/todos", addTodoHandler).Methods("POST")
 	return router
+}
+
+func addTodoHandler(writer http.ResponseWriter, request *http.Request) {
+	name := request.FormValue("name")
+	id := len(todoMap) + 1
+	todo := &Todo{Id: id, Name: name, CreatedAt: time.Now()}
+	todoMap[id] = todo
+
+	rd.JSON(writer, http.StatusCreated, todo)
+
 }
 
 func addTestTodos() {
