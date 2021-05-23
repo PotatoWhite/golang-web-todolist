@@ -4,6 +4,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/unrolled/render"
 	"net/http"
+	"strconv"
 	"time"
 )
 
@@ -29,7 +30,39 @@ func MakeHandler() http.Handler {
 	router.HandleFunc("/", indexHandler)
 	router.HandleFunc("/todos", getTodoListHandler).Methods("GET")
 	router.HandleFunc("/todos", addTodoHandler).Methods("POST")
+	router.HandleFunc("/todos/{id:[0-9]+}", removeTodoHandler).Methods("DELETE")
+	router.HandleFunc("/complete-todo/{id:[0-9]+}", completeTodoHandler).Methods("GET")
 	return router
+}
+
+func completeTodoHandler(writer http.ResponseWriter, request *http.Request) {
+	vars := mux.Vars(request)
+	id, _ := strconv.Atoi(vars["id"])
+	complete := request.FormValue("complete") == "true"
+	if todo, ok := todoMap[id]; ok {
+		todo.Completed = complete
+		rd.JSON(writer, http.StatusOK, Success{Success: true})
+		return
+	} else {
+		rd.JSON(writer, http.StatusNoContent, Success{Success: true})
+	}
+}
+
+type Success struct {
+	Success bool `json:"success"`
+}
+
+func removeTodoHandler(writer http.ResponseWriter, request *http.Request) {
+	vars := mux.Vars(request)
+	id, _ := strconv.Atoi(vars["id"])
+
+	if _, ok := todoMap[id]; ok {
+		delete(todoMap, id)
+		rd.JSON(writer, http.StatusNoContent, Success{Success: true})
+		return
+	} else {
+		rd.JSON(writer, http.StatusNoContent, Success{Success: false})
+	}
 }
 
 func addTodoHandler(writer http.ResponseWriter, request *http.Request) {
