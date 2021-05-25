@@ -2,16 +2,16 @@ package main
 
 import (
 	"github.com/potatowhite/web/golang-todolist/app"
-	"github.com/urfave/negroni"
+	"log"
 	"net/http"
 )
 
 func main() {
-	router := app.MakeHandler()
-	neg := negroni.Classic()
-	neg.UseHandler(router)
+	app := app.MakeHandler("./todos.db")
+	defer app.Close()
 
-	err := http.ListenAndServe(":3000", neg)
+	log.Println("Application started")
+	err := http.ListenAndServe(":3000", app.Handler)
 	if err != nil {
 		panic(err)
 	}

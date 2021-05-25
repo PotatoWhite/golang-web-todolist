@@ -8,13 +8,20 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"os"
 	"strconv"
 	"testing"
 )
 
 func TestTodos(t *testing.T) {
+	dbPath := "./unittest.db"
+
+	os.Remove(dbPath)
 	assert := assert.New(t)
-	ts := httptest.NewServer(MakeHandler())
+	ah := MakeHandler(dbPath)
+	defer ah.Close()
+
+	ts := httptest.NewServer(ah)
 	defer ts.Close()
 
 	// ready to test
@@ -94,7 +101,7 @@ func TestTodos(t *testing.T) {
 	// test delete 01
 	request, err := http.NewRequest("DELETE", ts.URL+"/todos/"+strconv.Itoa(todo01.Id), nil)
 	response, err := http.DefaultClient.Do(request)
-	assert.NoError( err)
+	assert.NoError(err)
 	assert.Equal(http.StatusNoContent, response.StatusCode)
 
 	all, err = http.Get(ts.URL + "/todos")

@@ -2,19 +2,14 @@ package model
 
 import "time"
 
-type dbHandler interface {
-	getTodos() []*Todo
-	addTodo(name string) *Todo
-	removeTodo(id int) bool
-	completeTodo(id int, complete bool) bool
-}
+
 
 type MemoryHandler struct {
 	todoMap   map[int]*Todo
 	lastIndex int
 }
 
-func (self *MemoryHandler) getTodos() []*Todo {
+func (self *MemoryHandler) GetTodos() []*Todo {
 	list := []*Todo{}
 	for _, v := range self.todoMap {
 		list = append(list, v)
@@ -22,13 +17,13 @@ func (self *MemoryHandler) getTodos() []*Todo {
 	return list
 }
 
-func (self *MemoryHandler) addTodo(name string) *Todo {
+func (self *MemoryHandler) AddTodo(name string) *Todo {
 	self.lastIndex++
 	self.todoMap[self.lastIndex] = &Todo{Id: self.lastIndex, Name: name, CreatedAt: time.Now(), Completed: false}
 	return self.todoMap[self.lastIndex]
 }
 
-func (self *MemoryHandler) removeTodo(id int) bool {
+func (self *MemoryHandler) RemoveTodo(id int) bool {
 	if _, ok := self.todoMap[id]; ok {
 		delete(self.todoMap, id)
 		return true
@@ -37,7 +32,7 @@ func (self *MemoryHandler) removeTodo(id int) bool {
 	return false
 }
 
-func (self *MemoryHandler) completeTodo(id int, complete bool) bool {
+func (self *MemoryHandler) CompleteTodo(id int, complete bool) bool {
 	if todo, ok := self.todoMap[id]; ok {
 		todo.Completed = complete
 		return true
@@ -46,7 +41,11 @@ func (self *MemoryHandler) completeTodo(id int, complete bool) bool {
 	return false
 }
 
-func newMemoryHandler() dbHandler {
+func (self *MemoryHandler) Close() {
+	self.Close()
+}
+
+func newMemoryHandler() DBHandler {
 	m := &MemoryHandler{}
 	m.todoMap = make(map[int]*Todo)
 	m.lastIndex = 0
